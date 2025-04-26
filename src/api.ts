@@ -2,7 +2,7 @@
 
 export const fetchChatResponse = async (messages: { role: string; content: string }[]) => {
   try {
-    const response = await fetch('http://localhost:4242/chat', {
+    const response = await fetch('https://aiserver-2pgq.onrender.com/chat', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
