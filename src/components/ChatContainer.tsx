@@ -1,11 +1,10 @@
-import  { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { ChatMessage } from './ChatMessage';
 import { ChatInput } from './ChatInput';
 import { ChatHeader } from './ChatHeader';
 import { TypingIndicator } from './TypingIndicator';
 import { fetchChatResponse } from '../api';
-
 import { Message, ChatState } from '../types';
 
 export const ChatContainer = () => {
@@ -14,7 +13,7 @@ export const ChatContainer = () => {
     isLoading: false,
     error: null,
   });
-  
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -41,11 +40,8 @@ export const ChatContainer = () => {
     try {
       const apiMessages = [
         { role: 'system', content: 'You are a helpful, friendly, and concise assistant.' },
-        ...chatState.messages.map(msg => ({ 
-          role: msg.role, 
-          content: msg.content 
-        })),
-        { role: 'user', content }
+        ...chatState.messages.map((msg) => ({ role: msg.role, content: msg.content })),
+        { role: 'user', content },
       ];
 
       const responseContent = await fetchChatResponse(apiMessages);
@@ -72,25 +68,27 @@ export const ChatContainer = () => {
   };
 
   return (
-    <div className="flex flex-col h-full max-w-3xl mx-auto">
+    <div className="flex flex-col h-screen max-w-full mx-auto bg-white dark:bg-gray-950 rounded-none shadow-none overflow-hidden">
       <ChatHeader />
-      
-      <div className="flex-1 overflow-y-auto py-4 scrollbar">
+
+      <div className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-700">
         {chatState.messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center px-4">
-            <img 
-              src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?ixid=M3w3MjUzNDh8MHwxfHNlYXJjaHwxfHxkaWdpdGFsJTIwYXNzaXN0YW50JTIwYWklMjBpbnRlcmZhY2UlMjB0ZWNobm9sb2d5fGVufDB8fHx8MTc0NTY1NzY2NXww&ixlib=rb-4.0.3&fit=fillmax&h=600&w=800" 
-              alt="AI Assistant"
-              className="w-full max-w-md rounded-xl mb-6 border-4 border-blue-600"
+          <div className="flex flex-col items-center justify-center text-center gap-6 h-full">
+            <img
+              src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?fit=crop&w=800&h=600"
+              alt="AI Assistant Illustration"
+              className="w-full max-w-md rounded-xl border-4 border-blue-600 shadow-md"
             />
-            <h2 className="text-2xl font-bold mb-2">Welcome to AI Assistant</h2>
-            <p className="text-gray-400 mb-6">Ask me anything and I'll do my best to help you.</p>
-            <div className="grid grid-cols-2 gap-2 w-full max-w-md">
-              {["How can I learn coding?", "Tell me a fun fact", "What's the weather like?", "Write a short poem"].map((suggestion) => (
+            <div>
+              <h2 className="text-2xl font-bold">Welcome to AI Assistant</h2>
+              <p className="text-gray-500 dark:text-gray-400">Ask me anything and I’ll do my best to help you.</p>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full max-w-md">
+              {['How can I learn coding?', 'Tell me a fun fact', 'What’s the weather like?', 'Write a short poem'].map((suggestion) => (
                 <button
                   key={suggestion}
                   onClick={() => handleSendMessage(suggestion)}
-                  className="bg-slate-800 hover:bg-slate-700 rounded-lg px-3 py-2 text-sm text-left transition-colors"
+                  className="bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 px-3 py-2 text-sm rounded-lg text-left transition-colors shadow"
                 >
                   {suggestion}
                 </button>
@@ -104,19 +102,18 @@ export const ChatContainer = () => {
             ))}
             {chatState.isLoading && <TypingIndicator />}
             {chatState.error && (
-              <div className="text-red-500 text-center py-2">
-                Error: {chatState.error}
+              <div className="text-red-500 text-center mt-4">
+                ⚠️ Error: {chatState.error}
               </div>
             )}
           </>
         )}
         <div ref={messagesEndRef} />
       </div>
-      
-      <div className="mt-4">
+
+      <div className="border-t border-gray-200 dark:border-gray-800 p-4">
         <ChatInput onSendMessage={handleSendMessage} isLoading={chatState.isLoading} />
       </div>
     </div>
   );
 };
- 
