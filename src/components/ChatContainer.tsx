@@ -68,7 +68,7 @@ export const ChatContainer = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen max-w-full mx-auto bg-white dark:bg-gray-950 rounded-none shadow-none overflow-hidden">
+    <div className="flex flex-col h-screen max-w-full mx-auto bg-black dark:bg-gray-950 rounded-none shadow-none overflow-hidden">
       <ChatHeader />
 
       <div className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-700">
