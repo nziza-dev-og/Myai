@@ -83,7 +83,7 @@ export const ChatContainer = () => {
               <h2 className="text-2xl font-bold">Welcome to AI Assistant</h2>
               <p className="text-gray-500 dark:text-gray-400">Ask me anything and I’ll do my best to help you.</p>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full max-w-md text-black">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full max-w-md text-white">
               {['How can I learn coding?', 'Tell me a fun fact', 'What’s the weather like?', 'Write a short poem'].map((suggestion) => (
                 <button
                   key={suggestion}
