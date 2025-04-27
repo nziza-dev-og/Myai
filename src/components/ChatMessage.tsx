@@ -1,6 +1,8 @@
-import { MessageCircle, User, Copy, Check } from 'lucide-react';
+'use client';
+
+import { MessageCircle, User, ClipboardCopy, Check } from 'lucide-react';
+import { useState } from 'react';
 import { Message } from '../types';
-import { useState, useEffect, useRef } from 'react';
 
 interface ChatMessageProps {
   message: Message;
@@ -13,98 +15,116 @@ export const ChatMessage = ({ message }: ChatMessageProps) => {
     minute: 'numeric',
   }).format(new Date(message.timestamp));
 
-  const [showMessage, setShowMessage] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const messageRef = useRef<HTMLDivElement>(null);
+  const [copiedCodeBlock, setCopiedCodeBlock] = useState<number | null>(null);
 
-  const parts = message.content.split(/```([\s\S]*?)```/g);
-  const isLongMessage = message.content.length > 300;
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowMessage(true);
-    }, 200); // Delay to simulate a "pulse" appearance
-    return () => clearTimeout(timer);
-  }, []);
-
-  const handleCopy = async () => {
-    if (messageRef.current) {
-      // Find all the <code> or <pre> elements in the message
-      const codeBlocks = messageRef.current.querySelectorAll('code, pre');
-      
-      if (codeBlocks.length > 0) {
-        let codeText = '';
-        codeBlocks.forEach(block => {
-          codeText += block.innerText + '\n'; // Append each code block's content
-        });
-
-        try {
-          await navigator.clipboard.writeText(codeText.trim()); // Copy code text to clipboard
-          setCopied(true);
-          setTimeout(() => setCopied(false), 1500); // Reset copied state after 1.5 seconds
-        } catch (err) {
-          console.error('Failed to copy:', err);
-        }
-      }
+  // Handle copy for code blocks
+  const handleCopy = async (code: string, index: number) => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopiedCodeBlock(index);
+      setTimeout(() => setCopiedCodeBlock(null), 1500);
+    } catch (error) {
+      console.error('Copy failed', error);
     }
   };
 
-  return (
-    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-8`}>
-      <div className={`flex max-w-[85%] ${isUser ? 'flex-row-reverse' : 'flex-row'} items-start`}>
-        <div
-          className={`flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center shadow-lg
-            ${isUser ? 'bg-gradient-to-br from-blue-500 to-blue-700 ml-3' : 'bg-gradient-to-br from-gray-600 to-gray-800 mr-3'}`}
-        >
-          {isUser ? <User size={20} className="text-white" /> : <MessageCircle size={20} className="text-white" />}
-        </div>
+  // Format the AI response
+  const formatBotResponse = (content: string) => {
+    const sections = content.split(/(?=```)/g); // Split when code block starts
 
-        <div className="flex flex-col">
-          <div
-            className={`text-xs font-semibold mb-2 ${isUser ? 'text-right mr-1' : 'text-left ml-1'} text-gray-400`}
-          >
-            {isUser ? 'You' : 'Assistant'}
-          </div>
+    return (
+      <div className="space-y-4">
+        {sections.map((section, index) => {
+          if (section.startsWith('```')) {
+            const code = section.replace(/```[a-z]*\n?/, '').replace(/```$/, '');
 
-          <div
-            ref={messageRef}
-            className={`relative group px-5 py-4 rounded-xl shadow-lg whitespace-pre-wrap transition-all duration-500
-              ${showMessage ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}
-              ${isUser
-                ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white'
-                : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200'}`}
-          >
-            {showMessage && (
-              <div className={`text-base leading-relaxed ${isLongMessage ? 'line-clamp-6' : ''}`}>
-                {parts.map((part, idx) =>
-                  idx % 2 === 0 ? (
-                    <span key={idx}>{part}</span>
+            return (
+              <div key={index} className="relative group">
+                {/* Copy button */}
+                <button
+                  onClick={() => handleCopy(code, index)}
+                  className="absolute top-2 right-2 bg-slate-600 hover:bg-slate-500 text-white p-1 rounded-md transition opacity-0 group-hover:opacity-100"
+                  title={copiedCodeBlock === index ? 'Copied!' : 'Copy'}
+                >
+                  {copiedCodeBlock === index ? (
+                    <Check size={16} className="text-green-400" />
                   ) : (
-                    <pre
-                      key={idx}
-                      className="bg-gray-900 text-green-400 p-4 rounded-xl my-3 overflow-x-auto text-sm font-mono"
-                    >
-                      <code>{part.trim()}</code>
-                    </pre>
-                  )
-                )}
+                    <ClipboardCopy size={16} />
+                  )}
+                </button>
+
+                {/* Code Block */}
+                <pre className="bg-slate-800 text-slate-100 rounded-xl p-4 overflow-x-auto text-xs">
+                  <code>{code}</code>
+                </pre>
               </div>
-            )}
+            );
+          } else {
+            return (
+              <div key={index} className="text-sm space-y-2">
+                {formatContent(section)}
+              </div>
+            );
+          }
+        })}
+      </div>
+    );
+  };
 
-            {!isUser && (
-              <button
-                onClick={handleCopy}
-                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-white"
-                title="Copy code"
-              >
-                {copied ? <Check size={16} /> : <Copy size={16} />}
-              </button>
+  // Format regular text (headings, lists, bold)
+  const formatContent = (text: string) => {
+    const lines = text.split('\n');
+    const formattedLines: JSX.Element[] = [];
+
+    lines.forEach((line, i) => {
+      if (line.startsWith('## ')) {
+        formattedLines.push(
+          <h3 key={i} className="font-bold text-blue-400 text-base">{line.replace('## ', '')}</h3>
+        );
+      } else if (/^[-*]\s/.test(line)) {
+        formattedLines.push(
+          <li key={i} className="list-disc list-inside text-slate-300">{line.replace(/^[-*]\s/, '')}</li>
+        );
+      } else if (line.trim() !== '') {
+        formattedLines.push(
+          <p key={i} className="text-slate-300">{formatBoldText(line)}</p>
+        );
+      }
+    });
+
+    return <div className="space-y-1">{formattedLines}</div>;
+  };
+
+  // Format bold text inside sentences
+  const formatBoldText = (text: string) => {
+    const parts = text.split(/(\*\*.*?\*\*)/g);
+
+    return parts.map((part, index) =>
+      part.startsWith('**') && part.endsWith('**') ? (
+        <strong key={index} className="font-semibold">{part.slice(2, -2)}</strong>
+      ) : (
+        part
+      )
+    );
+  };
+
+  return (
+    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-6`}>
+      <div className={`flex max-w-[80%] ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
+        <div className={`flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center ${isUser ? 'bg-blue-600 ml-3' : 'bg-slate-700 mr-3'}`}>
+          {isUser ? <User size={20} /> : <MessageCircle size={20} />}
+        </div>
+        <div className="flex flex-col">
+          <div className={`px-4 py-3 rounded-2xl ${isUser ? 'bg-blue-500 text-white rounded-tr-none' : 'bg-slate-700 text-white rounded-tl-none'}`}>
+            {isUser ? (
+              <p className="text-sm">{message.content}</p>
+            ) : (
+              formatBotResponse(message.content)
             )}
           </div>
-
-          <div className={`flex items-center mt-2 ${isUser ? 'justify-end' : 'justify-start'}`}>
-            <span className="text-xs text-gray-400">{formattedTime}</span>
-          </div>
+          <span className="text-xs text-gray-400 mt-1">
+            {formattedTime}
+          </span>
         </div>
       </div>
     </div>
