@@ -7,7 +7,7 @@ function App() {
         <ChatContainer />
       </div>
       <div className="text-center py-2 text-xs text-gray-500">
-        Built with JDoodle.AI | Powered by OpenAI Technology
+         Created by Jules-dev 
       </div>
     </div>
   );
