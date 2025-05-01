@@ -2,7 +2,11 @@ export interface Message {
   id: string;
   content: string;
   role: 'user' | 'assistant';
-  timestamp: Date;
+  timestamp: number;
+  voiceNote?: {
+    url: string;
+    duration: number; 
+}
 }
 
 export interface ChatState {
@@ -10,3 +14,8 @@ export interface ChatState {
   isLoading: boolean;
   error: string | null;
 }
+
+// export interface Message {
+// // in seconds
+//   };
+// }
